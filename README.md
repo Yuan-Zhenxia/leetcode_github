@@ -1,4 +1,5 @@
-This repo is continuously recording my process of doing exercises on LeetCode. 
+This repo is continuously recording my process of resolving problems on LeetCode. It's about 480 problems now.
+Also, I may solve problems on other websites. And I will write some basic algorithms in the repo.
 
 Some previous Accepted problems will be added in this repo later.
 
