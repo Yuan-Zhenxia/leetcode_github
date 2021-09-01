@@ -1,4 +1,4 @@
-package Acwing.dijkstra;
+package Acwing.Graph.dijkstra;
 
 import org.junit.Test;
 

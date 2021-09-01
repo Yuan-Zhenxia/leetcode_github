@@ -11,109 +11,124 @@ public class LC126_Word_Ladder2 {
     @Test
     public void test() {
         //System.out.println(calDis("lot", "dog"));
-        String a = "dd";
-        String b = "dd";
-        Set<String> set = new HashSet<>();
-        set.add(a);
-        System.out.println(set.contains(b));
 
         List<String> path = new ArrayList<>();
         List<String> wordList = new ArrayList<>();
-        wordList.add("hot"); wordList.add("dog"); wordList.add("dot");
+        wordList.add("red"); wordList.add("ted"); wordList.add("rex");
+        wordList.add("tex"); wordList.add("tax"); wordList.add("tad");
 
-        findLadders("hot", "dog", wordList);
+        List<List<String>> ladders = findLadders("red", "tax", wordList);
+        for (List<String> ls : ladders) {
+            for (String s : ls) {
+                System.out.print(" " + s);
+            }
+            System.out.println();
+        }
     }
 
-    List<List<String>> ans = new ArrayList<>();
-    public List<List<String>> findLadders(String beginWord, String endWord, List<String> wordList) {
-        Set<String> dict = new HashSet<>();
-        for (String s : wordList)
-            dict.add(s);
-        if (!dict.contains(endWord))
-            return ans;
-        dict.remove(beginWord);
-        dict.remove(endWord);
-        Set<String> q1 = new HashSet<>(), q2 = new HashSet<>();
-        q1.add(beginWord); q2.add(endWord);
-        HashMap<String, List<String>> next = new HashMap<>();
-        boolean reversed = false, found = false;
 
-        while (!q1.isEmpty()) {
-            Set<String> q = new HashSet<>();
-            for (String w : q1) {
-                char[] s = w.toCharArray();
-                for (int i = 0; i < s.length; ++i) {
-                    char ch = s[i];
-                    for (int j = 0; j < 26; ++j) {
-                        s[i] = (char) (j + 'a');
-                        String tem = String.valueOf(s);
-                        if (q2.contains(tem)) {
-                            if (reversed) {
-                                List<String> strs = next.getOrDefault(tem, new ArrayList<>());
-                                strs.add(w);
-                                next.put(tem, strs);
-                            } else {
-                                List<String> strs = next.getOrDefault(w, new ArrayList<>());
-                                strs.add(tem);
-                                next.put(w, strs);
-                            }
-                            found = true;
-                        }
-                        if (dict.contains(tem)) {
-                            if (reversed) {
-                                List<String> strs = next.getOrDefault(tem, new ArrayList<>());
-                                strs.add(w);
-                                next.put(tem, strs);
-                            } else {
-                                List<String> strs = next.getOrDefault(w, new ArrayList<>());
-                                strs.add(tem);
-                                next.put(w, strs);
-                            }
-                            q.add(tem);
-                        }
-                    }
-                    s[i] = ch;
+    class Node {
+        String val;
+        List<String> neis;
+        public Node (String v) {
+            this.val = v;
+            this.neis = new ArrayList<>();
+        }
+    }
+
+    Map<String, List<String>> prev = new HashMap<>();
+    /* cache represents the all the words that fit in the current format */
+    /* eg. h*t  will have hot, hit, etc. */
+    Map<String /* format */, List<String>> cache = new HashMap<>();
+
+    Map<String, Node> id2node = new HashMap<>();
+
+    Map<String, Boolean> used = new HashMap<>();
+
+    List<List<String>> re = new ArrayList<>();
+
+    public List<List<String>> findLadders(String b, String e, List<String> ws) {
+        int len = ws.size();
+        handle(ws);
+        if (!used.containsKey(b)) {
+            List<String> ls = new ArrayList<>();
+            ls.add(b);
+            handle(ls);
+        }
+        bfs(b, e);
+        return re;
+    }
+
+    /* path to record the path */
+    public void bfs(String b, String e) {
+        LinkedList<String> q = new LinkedList<>();
+        q.addLast(b);
+        used.put(b, true);
+
+        boolean flag = true;
+        while (flag && q.size() > 0) {
+            int size = q.size();
+
+            Set<String> toBeMarked = new HashSet<>();
+            while (size -- > 0) {
+                Node node = id2node.get(q.removeFirst());
+                if (node.val.equals(e)) {
+                    flag = false;
+                    continue;
+                }
+                for (String neiName : node.neis) {
+                    if (used.get(neiName)) continue; /* used the node */
+                    List<String> pres = prev.computeIfAbsent(neiName, k -> new ArrayList<>());
+                    pres.add(node.val);
+                    toBeMarked.add(neiName);
                 }
             }
-            if (found)
-                break;
-            for (String w : q)
-                dict.remove(w);
-            if (q.size() <= q2.size())
-                q1 = q;
-            else {
-                reversed = !reversed;
-                q1 = q2;
-                q2 = q;
+            for (String s : toBeMarked) {
+                q.addLast(s);
+                used.put(s, true);
             }
         }
-        if (found) {
-            List<String> path = new ArrayList<>();
-            path.add(beginWord);
-            backtracking(beginWord, endWord, next, path);
-        }
-
-        return ans;
+        if (!flag) buildPath(b, e, new LinkedList<String>());
     }
 
-    void backtracking(String src, String dst, HashMap<String, List<String>> next,
-                      List<String> path) {
-        if (src.equals(dst)) {
-            List<String> tem = new ArrayList<>();
-            tem.addAll(path);
-            ans.add(tem);
+    /* 使用dfs来找前驱节点，并且建立路径 */
+    public void buildPath(String b, String e, LinkedList<String> path) {
+        path.addFirst(e);
+        List<String> pres = prev.get(e);
+        if (e.equals(b)) {
+            re.add((List<String>) path.clone());
+            path.removeFirst();
             return;
         }
-        if (next.get(src) == null)
-            return;
-        for (String s : next.get(src)) {
-            path.add(s);
-            backtracking(s, dst, next, path);
-            path.remove(s);
-        }
+        for (String p : pres) buildPath(b, p, path);
+        path.removeFirst();
     }
 
+    /* create node and graph */
+    public void handle(List<String> ws) {
+        /* asterisk * */
+        for (String w : ws) {
 
+            id2node.put(w, new Node(w));
+            used.put(w, false);
 
+            int len = w.length();
+            char[] cs = w.toCharArray();
+            for (int i = 0; i < len; ++i) {
+                char c = cs[i];
+                cs[i] = '*';
+                String format = new String(cs);
+                List<String> ls = cache.computeIfAbsent(format, k -> new ArrayList<>());
+                /* add w to all it's neighboors */
+                for (String id : ls) {
+                    Node nei = id2node.get(id);
+                    nei.neis.add(w);
+                    id2node.get(w).neis.add(nei.val);
+                }
+                ls.add(w);
+                cs[i] = c;
+            }
+        }
+    }
 
 }

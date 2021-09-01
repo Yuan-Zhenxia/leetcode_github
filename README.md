@@ -5,7 +5,7 @@ Some previous Accepted problems will be added in this repo later.
 
 And my future Accepted problems will be added in this repo after I finishing them. Some of them will have notations.
 
-| 序号 | 题目  |
+| No. | Problems  |
 | :-----| :---- |
 |1|Two Sum|
 |2|Add Two Numbers|
